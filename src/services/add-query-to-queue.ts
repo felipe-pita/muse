@@ -13,6 +13,7 @@ import {SponsorBlock} from 'sponsorblock-api';
 import Config from './config.js';
 import KeyValueCacheProvider from './key-value-cache.js';
 import {ONE_HOUR_IN_SECONDS} from '../utils/constants.js';
+import debug from '../utils/debug.js';
 
 @injectable()
 export default class AddQueryToQueue {
@@ -59,17 +60,22 @@ export default class AddQueryToQueue {
 
     await interaction.deferReply({ephemeral: queueAddResponseEphemeral});
 
+    debug(`fetching songs for query: ${query}`);
     let [newSongs, extraMsg] = await this.getSongs.getSongs(query, playlistLimit, shouldSplitChapters);
 
     if (newSongs.length === 0) {
+      debug(`no songs found for query: ${query}`);
       throw new Error('no songs found');
     }
+
+    debug(`found ${newSongs.length} songs for query: ${query}`);
 
     if (shuffleAdditions) {
       newSongs = shuffle(newSongs);
     }
 
     if (this.config.ENABLE_SPONSORBLOCK) {
+      debug('SponsorBlock is enabled, skipping segments');
       newSongs = await Promise.all(newSongs.map(this.skipNonMusicSegments.bind(this)));
     }
 
@@ -86,9 +92,11 @@ export default class AddQueryToQueue {
     let statusMsg = '';
 
     if (player.voiceConnection === null) {
+      debug(`connecting to voice channel: ${targetVoiceChannel.name} (${targetVoiceChannel.id})`);
       await player.connect(targetVoiceChannel);
 
       // Resume / start playback
+      debug('starting playback');
       await player.play();
 
       if (wasPlayingSong) {
@@ -100,6 +108,7 @@ export default class AddQueryToQueue {
       });
     } else if (player.status === STATUS.IDLE) {
       // Player is idle, start playback instead
+      debug('player is idle, starting playback');
       await player.play();
     }
 

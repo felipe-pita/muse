@@ -24,6 +24,7 @@ const CONFIG_MAP = {
   BOT_ACTIVITY: process.env.BOT_ACTIVITY ?? 'music',
   ENABLE_SPONSORBLOCK: process.env.ENABLE_SPONSORBLOCK === 'true',
   SPONSORBLOCK_TIMEOUT: process.env.ENABLE_SPONSORBLOCK ?? 5,
+  DEBUG_MODE: process.env.DEBUG_MODE === 'true',
 } as const;
 
 const BOT_ACTIVITY_TYPE_MAP = {
@@ -49,6 +50,7 @@ export default class Config {
   readonly BOT_ACTIVITY!: string;
   readonly ENABLE_SPONSORBLOCK!: boolean;
   readonly SPONSORBLOCK_TIMEOUT!: number;
+  readonly DEBUG_MODE!: boolean;
 
   constructor() {
     for (const [key, value] of Object.entries(CONFIG_MAP)) {
@@ -69,6 +71,10 @@ export default class Config {
         (this as any)[key] = value.trim();
       } else if (typeof value === 'boolean') {
         this[key as ConditionalKeys<typeof CONFIG_MAP, boolean>] = value;
+
+        if (key === 'DEBUG_MODE' && value) {
+          process.env.DEBUG = 'muse';
+        }
       } else {
         throw new Error(`Unsupported type for ${key}`);
       }

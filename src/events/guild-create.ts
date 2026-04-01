@@ -7,6 +7,7 @@ import {prisma} from '../utils/db.js';
 import {REST} from '@discordjs/rest';
 import {Setting} from '@prisma/client';
 import registerCommandsOnGuild from '../utils/register-commands-on-guild.js';
+import debug from '../utils/debug.js';
 
 export async function createGuildSettings(guildId: string): Promise<Setting> {
   return prisma.setting.upsert({
@@ -21,6 +22,7 @@ export async function createGuildSettings(guildId: string): Promise<Setting> {
 }
 
 export default async (guild: Guild): Promise<void> => {
+  debug(`guildCreate event: ${guild.name} (${guild.id})`);
   await createGuildSettings(guild.id);
 
   const config = container.get<Config>(TYPES.Config);

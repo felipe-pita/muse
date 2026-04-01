@@ -128,6 +128,7 @@ export default class {
   }
 
   disconnect(): void {
+    debug(`disconnecting from voice channel in guild: ${this.guildId}`);
     if (this.voiceConnection) {
       if (this.status === STATUS.PLAYING) {
         this.pause();
@@ -201,6 +202,8 @@ export default class {
       throw new Error('Queue empty.');
     }
 
+    debug(`playing song: ${currentSong.title} (${currentSong.url}) in guild: ${this.guildId}`);
+
     // Cancel any pending idle disconnection
     if (this.disconnectTimer) {
       clearInterval(this.disconnectTimer);
@@ -272,6 +275,8 @@ export default class {
     if (this.status !== STATUS.PLAYING) {
       throw new Error('Not currently playing.');
     }
+
+    debug(`pausing in guild: ${this.guildId}`);
 
     this.status = STATUS.PAUSED;
 
@@ -417,6 +422,7 @@ export default class {
   }
 
   add(song: QueuedSong, {immediate = false} = {}): void {
+    debug(`adding song to queue: ${song.title} (immediate: ${String(immediate)}) in guild: ${this.guildId}`);
     if (song.playlist || !immediate) {
       // Add to end of queue
       this.queue.push(song);
@@ -464,6 +470,7 @@ export default class {
   }
 
   stop(): void {
+    debug(`stopping in guild: ${this.guildId}`);
     this.disconnect();
     this.queuePosition = 0;
     this.queue = [];

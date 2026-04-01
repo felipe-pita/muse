@@ -6,6 +6,7 @@ import {TYPES} from '../types.js';
 import ThirdParty from './third-party.js';
 import shuffle from 'array-shuffle';
 import {QueuedPlaylist} from './player.js';
+import debug from '../utils/debug.js';
 
 export interface SpotifyTrack {
   name: string;
@@ -21,6 +22,7 @@ export default class {
   }
 
   async getAlbum(url: string, playlistLimit: number): Promise<[SpotifyTrack[], QueuedPlaylist]> {
+    debug(`fetching Spotify album: ${url}`);
     const uri = spotifyURI.parse(url) as spotifyURI.Album;
     const [{body: album}, {body: {items}}] = await Promise.all([this.spotify.getAlbum(uri.id), this.spotify.getAlbumTracks(uri.id, {limit: 50})]);
     const tracks = this.limitTracks(items, playlistLimit).map(this.toSpotifyTrack);
@@ -30,6 +32,7 @@ export default class {
   }
 
   async getPlaylist(url: string, playlistLimit: number): Promise<[SpotifyTrack[], QueuedPlaylist]> {
+    debug(`fetching Spotify playlist: ${url}`);
     const uri = spotifyURI.parse(url) as spotifyURI.Playlist;
 
     let [{body: playlistResponse}, {body: tracksResponse}] = await Promise.all([this.spotify.getPlaylist(uri.id), this.spotify.getPlaylistTracks(uri.id, {limit: 50})]);
@@ -53,6 +56,7 @@ export default class {
   }
 
   async getTrack(url: string): Promise<SpotifyTrack> {
+    debug(`fetching Spotify track: ${url}`);
     const uri = spotifyURI.parse(url) as spotifyURI.Track;
     const {body} = await this.spotify.getTrack(uri.id);
 

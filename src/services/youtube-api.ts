@@ -10,6 +10,7 @@ import KeyValueCacheProvider from './key-value-cache.js';
 import {ONE_HOUR_IN_SECONDS, ONE_MINUTE_IN_SECONDS} from '../utils/constants.js';
 import {parseTime} from '../utils/time.js';
 import getYouTubeID from 'get-youtube-id';
+import debug from '../utils/debug.js';
 
 interface VideoDetailsResponse {
   id: string;
@@ -74,6 +75,7 @@ export default class {
   }
 
   async search(query: string, shouldSplitChapters: boolean): Promise<SongMetadata[]> {
+    debug(`searching YouTube: ${query}`);
     const result = await this.ytsrQueue.add<ytsr.VideoResult>(async () => this.cache.wrap(
       ytsr,
       query,
@@ -106,6 +108,7 @@ export default class {
   }
 
   async getVideo(url: string, shouldSplitChapters: boolean): Promise<SongMetadata[]> {
+    debug(`fetching YouTube video: ${url}`);
     const result = await this.getVideosByID([String(getYouTubeID(url))]);
     const video = result.at(0);
 
@@ -117,6 +120,7 @@ export default class {
   }
 
   async getPlaylist(listId: string, shouldSplitChapters: boolean): Promise<SongMetadata[]> {
+    debug(`fetching YouTube playlist: ${listId}`);
     const playlistParams = {
       searchParams: {
         part: 'id, snippet, contentDetails',

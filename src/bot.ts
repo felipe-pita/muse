@@ -34,6 +34,7 @@ export default class {
   public async register(): Promise<void> {
     // Load in commands
     for (const command of container.getAll<Command>(TYPES.Command)) {
+      debug(`registering command: /${command.slashCommand.name ?? 'unknown'}`);
       // Make sure we can serialize to JSON without errors
       try {
         command.slashCommand.toJSON();
@@ -58,6 +59,7 @@ export default class {
     this.client.on('interactionCreate', async interaction => {
       try {
         if (interaction.isCommand()) {
+          debug(`command execution: /${interaction.commandName} (user: ${interaction.user.tag}, guild: ${interaction.guild?.name ?? 'unknown'})`);
           const command = this.commandsByName.get(interaction.commandName);
 
           if (!command || !interaction.isChatInputCommand()) {
@@ -77,8 +79,10 @@ export default class {
 
           if (command.execute) {
             await command.execute(interaction);
+            debug(`command execution finished: /${interaction.commandName}`);
           }
         } else if (interaction.isButton()) {
+          debug(`button interaction: ${interaction.customId} (user: ${interaction.user.tag}, guild: ${interaction.guild?.name ?? 'unknown'})`);
           const command = this.commandsByButtonId.get(interaction.customId);
 
           if (!command) {
@@ -100,6 +104,7 @@ export default class {
           }
         }
       } catch (error: unknown) {
+        console.error(error);
         debug(error);
 
         // This can fail if the message was deleted, and we don't want to crash the whole bot
@@ -161,8 +166,22 @@ export default class {
     this.client.on('error', console.error);
     this.client.on('debug', debug);
 
-    this.client.on('guildCreate', handleGuildCreate);
-    this.client.on('voiceStateUpdate', handleVoiceStateUpdate);
+    this.client.on('guildCreate', async guild => {
+      try {
+        await handleGuildCreate(guild);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+
+    this.client.on('voiceStateUpdate', async (oldState, newState) => {
+      try {
+        await handleVoiceStateUpdate(oldState, newState);
+      } catch (error) {
+        console.error(error);
+      }
+    });
+
     await this.client.login();
   }
 }

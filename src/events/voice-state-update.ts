@@ -4,8 +4,10 @@ import {TYPES} from '../types.js';
 import PlayerManager from '../managers/player.js';
 import {getSizeWithoutBots} from '../utils/channels.js';
 import {getGuildSettings} from '../utils/get-guild-settings.js';
+import debug from '../utils/debug.js';
 
 export default async (oldState: VoiceState, _: VoiceState): Promise<void> => {
+  debug(`voiceStateUpdate event: (user: ${oldState.member?.user.tag}, guild: ${oldState.guild.id})`);
   const playerManager = container.get<PlayerManager>(TYPES.Managers.Player);
 
   const player = playerManager.get(oldState.guild.id);

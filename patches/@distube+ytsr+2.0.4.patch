@@ -1,0 +1,67 @@
+diff --git a/node_modules/@distube/ytsr/lib/parseItem.js b/node_modules/@distube/ytsr/lib/parseItem.js
+index 4ca33b7..1445c5f 100755
+--- a/node_modules/@distube/ytsr/lib/parseItem.js
++++ b/node_modules/@distube/ytsr/lib/parseItem.js
+@@ -54,15 +54,18 @@ const _parseAuthor = obj => {
+   const ownerBadgesString = obj.ownerBadges && JSON.stringify(obj.ownerBadges);
+   const isOfficial = !!(ownerBadgesString && ownerBadgesString.includes('OFFICIAL'));
+   const isVerified = !!(ownerBadgesString && ownerBadgesString.includes('VERIFIED'));
+-  const author = obj.ownerText && obj.ownerText.runs[0];
++  const author = obj.ownerText && obj.ownerText.runs && obj.ownerText.runs[0];
+   if (!author || !author.navigationEndpoint) return null;
+   const authorUrl =
+-    author.navigationEndpoint.browseEndpoint.canonicalBaseUrl ||
+-    author.navigationEndpoint.commandMetadata.webCommandMetadata.url;
++    (author.navigationEndpoint && author.navigationEndpoint.browseEndpoint && author.navigationEndpoint.browseEndpoint.canonicalBaseUrl) ||
++    (author.navigationEndpoint &&
++      author.navigationEndpoint.commandMetadata &&
++      author.navigationEndpoint.commandMetadata.webCommandMetadata &&
++      author.navigationEndpoint.commandMetadata.webCommandMetadata.url);
+   return {
+     name: author.text,
+-    channelID: author.navigationEndpoint.browseEndpoint.browseId,
+-    url: new URL(authorUrl, BASE_VIDEO_URL).toString(),
++    channelID: author.navigationEndpoint && author.navigationEndpoint.browseEndpoint && author.navigationEndpoint.browseEndpoint.browseId,
++    url: authorUrl ? new URL(authorUrl, BASE_VIDEO_URL).toString() : null,
+     bestAvatar: UTIL.prepImg(authorImg.thumbnail.thumbnails)[0] || null,
+     avatars: UTIL.prepImg(authorImg.thumbnail.thumbnails),
+     ownerBadges: Array.isArray(obj.ownerBadges) ? obj.ownerBadges.map(a => a.metadataBadgeRenderer.tooltip) : [],
+@@ -90,23 +93,31 @@ const _parseOwner = obj => {
+   // Or return { name: obj.shortBylineText.simpleText };
+ 
+   const owner =
+-    (obj.shortBylineText && obj.shortBylineText.runs[0]) || (obj.longBylineText && obj.longBylineText.runs[0]);
++    (obj.shortBylineText && obj.shortBylineText.runs && obj.shortBylineText.runs[0]) ||
++    (obj.longBylineText && obj.longBylineText.runs && obj.longBylineText.runs[0]);
+ 
+-  if (!owner.navigationEndpoint) return null;
++  if (!owner || !owner.navigationEndpoint) return null;
+   // Or return { name: owner.text };
+ 
+   const ownerUrl =
+-    owner.navigationEndpoint.browseEndpoint.canonicalBaseUrl ||
+-    owner.navigationEndpoint.commandMetadata.webCommandMetadata.url;
++    (owner.navigationEndpoint && owner.navigationEndpoint.browseEndpoint && owner.navigationEndpoint.browseEndpoint.canonicalBaseUrl) ||
++    (owner.navigationEndpoint &&
++      owner.navigationEndpoint.commandMetadata &&
++      owner.navigationEndpoint.commandMetadata.webCommandMetadata &&
++      owner.navigationEndpoint.commandMetadata.webCommandMetadata.url);
+   const ownerBadgesString = obj.ownerBadges && JSON.stringify(obj.ownerBadges);
+   const isOfficial = !!(ownerBadgesString && ownerBadgesString.includes('OFFICIAL'));
+   const isVerified = !!(ownerBadgesString && ownerBadgesString.includes('VERIFIED'));
+-  const fallbackURL = owner.navigationEndpoint.commandMetadata.webCommandMetadata.url;
++  const fallbackURL =
++    owner.navigationEndpoint &&
++    owner.navigationEndpoint.commandMetadata &&
++    owner.navigationEndpoint.commandMetadata.webCommandMetadata &&
++    owner.navigationEndpoint.commandMetadata.webCommandMetadata.url;
+ 
+   return {
+     name: owner.text,
+-    channelID: owner.navigationEndpoint.browseEndpoint.browseId,
+-    url: new URL(ownerUrl || fallbackURL, BASE_VIDEO_URL).toString(),
++    channelID: owner.navigationEndpoint && owner.navigationEndpoint.browseEndpoint && owner.navigationEndpoint.browseEndpoint.browseId,
++    url: ownerUrl || fallbackURL ? new URL(ownerUrl || fallbackURL, BASE_VIDEO_URL).toString() : null,
+     ownerBadges: Array.isArray(obj.ownerBadges) ? obj.ownerBadges.map(a => a.metadataBadgeRenderer.tooltip) : [],
+     verified: isOfficial || isVerified,
+   };

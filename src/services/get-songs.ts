@@ -6,6 +6,7 @@ import ffmpeg from 'fluent-ffmpeg';
 import YoutubeAPI from './youtube-api.js';
 import SpotifyAPI, {SpotifyTrack} from './spotify-api.js';
 import {URL} from 'node:url';
+import debug from '../utils/debug.js';
 
 @injectable()
 export default class {
@@ -18,6 +19,7 @@ export default class {
   }
 
   async getSongs(query: string, playlistLimit: number, shouldSplitChapters: boolean): Promise<[SongMetadata[], string]> {
+    debug(`getSongs query: ${query}`);
     const newSongs: SongMetadata[] = [];
     let extraMsg = '';
 
@@ -34,11 +36,14 @@ export default class {
       ];
 
       if (YOUTUBE_HOSTS.includes(url.host)) {
+        debug(`query is a YouTube URL: ${url.host}`);
         // YouTube source
         if (url.searchParams.get('list')) {
+          debug(`query is a YouTube playlist: ${url.searchParams.get('list')}`);
           // YouTube playlist
           newSongs.push(...await this.youtubePlaylist(url.searchParams.get('list')!, shouldSplitChapters));
         } else {
+          debug('query is a YouTube video');
           const songs = await this.youtubeVideo(url.href, shouldSplitChapters);
 
           if (songs) {
@@ -48,7 +53,9 @@ export default class {
           }
         }
       } else if (url.protocol === 'spotify:' || url.host === 'open.spotify.com') {
+        debug('query is a Spotify URL');
         if (this.spotifyAPI === undefined) {
+          debug('Spotify API is not enabled');
           throw new Error('Spotify is not enabled!');
         }
 
@@ -72,6 +79,7 @@ export default class {
 
         newSongs.push(...convertedSongs);
       } else {
+        debug('query is a generic URL (HLS)');
         const song = await this.httpLiveStream(query);
 
         if (song) {
@@ -85,6 +93,7 @@ export default class {
         throw err;
       }
 
+      debug(`query is not a URL or failed to parse: ${err.message}`);
       // Not a URL, must search YouTube
       const songs = await this.youtubeVideoSearch(query, shouldSplitChapters);
 

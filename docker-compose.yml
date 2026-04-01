@@ -1,0 +1,10 @@
+services:
+  muse:
+    build: .
+    image: muse-local
+    container_name: muse
+    restart: always
+    volumes:
+      - ./data:/data
+    env_file:
+      - .env
